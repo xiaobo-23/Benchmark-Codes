@@ -1,25 +1,31 @@
-### Example code for the Heisenberg model on a tri-angular lattice
+### Example code for the Hubbard model on a tri-angular lattice
 using ITensors
 let
-    Ny = 6
+    Ny = 3
     Nx = 12
     N = Nx * Ny
-    
-    sites = siteinds("S=1/2", N; conserve_qns = true)
+    t = 1.0                 # The hopping amplitude in the Hubbard model
+    U = 8.0                 # The on-site Coulomb interaction in the Hubbard model
+    sites = siteinds("Electron", N; conserve_qns = true)
 
     # Obtain an array of LatticeBond structs
-    lattice = triangular_lattice(Nx, Ny, yperiodic = false)
+    lattice = triangular_lattice(Nx, Ny, yperiodic = true)
 
     
-    
-    # Define the Heisenberg spin Hamiltonian on this lattice
-    # Implement the Hubbard model [To Do].
+    # Define the Hubbard Hamiltonian on a triangular lattice
     ampo = OpSum()
     for bond in lattice
-        ampo .+= 0.5, "S+", bond.s1, "S-", bond.s2
-        ampo .+= 0.5, "S-", bond.s1, "S+", bond.s2
-        ampo .+=      "Sz", bond.s1, "Sz", bond.s2
+        ampo += -t, "Cdagup", bond.s1, "Cup", bond.s2
+        ampo += -t, "Cdagup", bond.s2, "Cup", bond.s1
+        ampo += -t, "Cdagdn", bond.s1, "Cdn", bond.s2
+        ampo += -t, "Cdagdn", bond.s2, "Cdn", bond.s1
     end
+
+    # On-site interaction
+    for n in 1:N
+        ampo += U, "Nupdn", N
+    end
+
     H = MPO(ampo, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n = 1:N]
@@ -31,5 +37,9 @@ let
     @show sweeps
 
     energy, ψ = dmrg(H, ψ₀, sweeps)
+    @show t, U
+    @show flux(ψ)
+    @show maxlinkdim(ψ)
+    @show energy
     return
 end
