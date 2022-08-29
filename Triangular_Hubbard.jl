@@ -31,8 +31,8 @@ let
     state = [isodd(n) ? "Up" : "Dn" for n = 1:N]
     ψ₀ = randomMPS(sites, state, 20)
 
-    sweeps = Sweeps(10)
-    maxdim!(sweeps, 20, 70, 100, 100, 200, 400, 800)
+    sweeps = Sweeps(20)
+    maxdim!(sweeps, 20, 70, 100, 100, 200, 400, 800, 1000, 1500)
     cutoff!(sweeps, 1E-8)
     @show sweeps
 
